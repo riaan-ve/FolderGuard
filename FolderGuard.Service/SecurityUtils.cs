@@ -1,5 +1,6 @@
 public static class SecurityUtils
 {
+	// Function to provide user masked password entry
     public static byte[] GetMaskedBytes()
     {
         var password = new List<byte>();
@@ -18,6 +19,7 @@ public static class SecurityUtils
             else if (!char.IsControl(key.KeyChar))
             {
                 password.Add((byte)key.KeyChar);
+				// Mask with *
                 Console.Write("*");
             }
         }

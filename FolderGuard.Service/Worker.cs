@@ -27,6 +27,7 @@ public class Worker : BackgroundService
 		Directory.CreateDirectory(watchPath);
 		Directory.CreateDirectory(outputDir);
 
+		// Create wacher to monitor recursively
 		_watcher = new FileSystemWatcher(watchPath)
 		{
 			IncludeSubdirectories = true,
@@ -37,6 +38,7 @@ public class Worker : BackgroundService
 		{
 			if (!Directory.Exists(e.FullPath))
 			{
+				// Add created file to be queued for encryption
 				_fileQueue.Writer.TryWrite(e.FullPath);
 			}
 		};
@@ -44,6 +46,7 @@ public class Worker : BackgroundService
 		_logger.LogInformation("Watching: {in} | Outputting to: {out}", watchPath, outputDir);
 
 		var consumers = new List<Task>();
+		// Add task to list of tasks
 		for (int i = 0; i < maxParallelism; i++)
 		{
 			consumers.Add(ConsumeQueueAsync(i, stoppingToken));
@@ -54,6 +57,7 @@ public class Worker : BackgroundService
 
 	private async Task ConsumeQueueAsync(int workerId, CancellationToken stoppingToken)
 	{
+		// Keep consuming until the channel is marked as complete
 		await foreach (var filePath in _fileQueue.Reader.ReadAllAsync(stoppingToken))
 		{
 			try
@@ -70,12 +74,15 @@ public class Worker : BackgroundService
 		}
 	}
 
+
 	private async Task ProcessFileAsync(string inputPath, CancellationToken ct)
 	{
 		string relativePath = Path.GetRelativePath(_options.PathToWatch, inputPath);
 		string outputPath = Path.Combine(_options.OutputDir, relativePath + ".enc");
 
 		string? outputSubDir = Path.GetDirectoryName(outputPath);
+
+		// Recreate the source subfolder structure in the output directory
 		if (!string.IsNullOrEmpty(outputSubDir))
 		{
 			Directory.CreateDirectory(outputSubDir);
@@ -87,7 +94,9 @@ public class Worker : BackgroundService
 		if (success)
 		{
 			_logger.LogInformation("Processed: {relPath}", relativePath);
+			// Remove source file only after successful encryption to prevent data loss
 			File.Delete(inputPath);
+			// TODO: If directory structure is empty, remove empty directories in source location
 		}
 		else
 		{
@@ -107,6 +116,7 @@ public class Worker : BackgroundService
 			}
 			catch (IOException)
 			{
+				// File might be locked by the OS during copy, retry until accessible
 				await Task.Delay(1000, token);
 			}
 		}

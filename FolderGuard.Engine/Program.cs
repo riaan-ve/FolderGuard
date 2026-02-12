@@ -1,11 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Security.Cryptography;
-using System.Text;
-using System.Diagnostics;
-using System.Text.Json;
-using System.Threading.Tasks;
-using System.Collections.Specialized;
+﻿using System.Text.Json;
 
 class Program
 {
@@ -13,6 +6,7 @@ class Program
 	{
 		try
 		{
+			// Read the entire JSON payload piped from the parent process
 			string inputJson = await Console.In.ReadToEndAsync();
 			if (string.IsNullOrWhiteSpace(inputJson)) return 1;
 
@@ -31,6 +25,7 @@ class Program
 				case "decrypt":
 				case "-d":
 					Console.WriteLine($"Decrypting {request.FileIn}...");
+					// TODO: Implement File Decryptor
 					//FileDecryptor.DecryptFile(request);
 					//Console.WriteLine("Success.");
 					break;

@@ -20,6 +20,7 @@ public class ExternalEncryptionEngine : IEncryptionEngine
         {
             FileName = _options.AppPath,
             UseShellExecute = false,
+			// Redirect stdin to pass JSON without exposing data
             RedirectStandardInput = true,
             CreateNoWindow = true
         };
@@ -29,6 +30,7 @@ public class ExternalEncryptionEngine : IEncryptionEngine
 
         try
         {
+			// Define instructions for the external tool
             var payload = new
             {
                 Action = "encrypt",
